@@ -1,1 +1,43 @@
+name: 生成案件通 APK
 
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: 安装 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 同步安卓项目
+        run: npx cap sync android
+
+      - name: 生成 Debug APK
+        working-directory: android
+        run: chmod +x ./gradlew && ./gradlew assembleDebug
+
+      - name: 上传 APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: 案件通-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
